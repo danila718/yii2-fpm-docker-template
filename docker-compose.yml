@@ -1,0 +1,49 @@
+version: '3.2'
+
+networks:
+  default:
+    driver: bridge
+volumes:
+  # persist the database
+  yii2advanced_db:
+
+services:
+  yii:
+    image: yiisoftware/yii2-php:7.4-fpm
+    volumes:
+      - ./:/app
+      - ~/.composer-docker/cache:/root/.composer/cache:delegated
+    environment:
+      XDEBUG_CONFIG: "client_port=9003 discover_client_host=1" #by default client_port may be 9000/9003/9005
+      PHP_ENABLE_XDEBUG: 1
+    networks:
+      - default
+    depends_on:
+      - db
+  nginx:
+    image: nginx:1.17.8
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./:/app
+      - ./docker/nginx:/etc/nginx/yii2advanced
+      - ./docker/nginx/configs/local.yii2advanced.ru.conf:/etc/nginx/conf.d/local.yii2advanced.ru.conf
+      - ./docker/nginx/configs/local.admin.yii2advanced.ru.conf:/etc/nginx/conf.d/local.admin.yii2advanced.ru.conf
+    networks:
+      - default
+    depends_on:
+      - yii
+  db:
+    image: postgres:9.5
+    restart: always
+    environment:
+      - POSTGRES_DB=yii2advanced
+      - POSTGRES_USER=yii2advanced
+      - POSTGRES_PASSWORD=secret
+    ports:
+      - '5432:5432'
+    volumes:
+      - yii2advanced_db:/var/lib/postgresql/data
+    networks:
+      - default

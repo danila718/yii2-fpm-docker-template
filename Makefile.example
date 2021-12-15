@@ -1,0 +1,81 @@
+CURRENT_USER := $(shell id -u)
+CURRENT_GROUP := $(shell id -g)
+CURRENT_DIR := $(shell pwd)
+
+NODE := docker run --rm -it -u $(CURRENT_USER):$(CURRENT_GROUP) -v $(CURRENT_DIR):/app --workdir /app node:12.18
+DB := docker-compose exec -T -u $(CURRENT_USER):$(CURRENT_GROUP) db
+COMPOSER := docker-compose exec -T -u $(CURRENT_USER):$(CURRENT_GROUP) cris composer
+APP := docker-compose exec -T -u $(CURRENT_USER):$(CURRENT_GROUP) cris php
+
+.DEFAULT_GOAL = up-app
+
+init: build-app up-app composer-install npm-install npm-dev
+
+build-app:
+	docker-compose build $(args)
+
+up-app:
+	docker-compose up -d
+
+down-app:
+	docker-compose down
+
+composer:
+	$(COMPOSER) $(args)
+
+composer-install:
+	$(COMPOSER) install $(args)
+
+composer-update:
+	$(COMPOSER) update $(args)
+
+composer-require:
+	$(COMPOSER) require $(args)
+
+composer-require-dev:
+	$(COMPOSER) require --dev $(args)
+
+composer-dump-autoload:
+	$(COMPOSER) dump-autoload $(args)
+
+# make phpcsfixer args="--dry-run"
+phpcsfixer:
+	$(APP) vendor/friendsofphp/php-cs-fixer/php-cs-fixer fix -vvv $(args)
+
+yii-app:
+	$(APP) yii $(args)
+
+yii-cache-flush-all:
+	$(APP) yii cache/flush-all && $(APP) yii cache/flush-schema --interactive=0
+
+migrate-up-force:
+	$(APP) yii migrate/up $(args) --interactive=0
+
+migrate-up:
+	$(APP) yii migrate/up $(args)
+
+migrate-down:
+	$(APP) yii migrate/down $(args)
+
+npm-install:
+	$(NODE) npm install $(args)
+
+npm-prod:
+	$(NODE) npm run prod
+
+npm-dev:
+	$(NODE) npm run dev
+
+npm-watch:
+	$(NODE) npm run watch
+
+db-dump:
+	$(DB) pg_dump --no-owner --username=$(user) $(dbname) > $(outfile)
+
+db-expand:
+	$(DB) psql --username=$(user) $(dbname) < $(dumpfile)
+
+.PHONY: build-app up-app down-app composer composer-install composer-update composer-require composer-require-dev composer-update composer-dump-autoload
+.PHONY: yii-app yii-cache-flush-all phpcsfixer migrate-up migrate-down
+.PHONY: npm-install npm-prod npm-dev
+.PHONY: db-dump db-expand

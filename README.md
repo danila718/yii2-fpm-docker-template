@@ -17,3 +17,5 @@ You can use this template to quickly set up docker-compose in your project.
 You can use the sample certificate files from `docker/nginx/certs/`
 5. Add to your `/etc/hosts` file this line: `127.0.0.1 local.yousitedomain.com local.admin.yousitedomain.com`
 6. Run `docker-compose up -d` at your project
+
+[//]: # (test)

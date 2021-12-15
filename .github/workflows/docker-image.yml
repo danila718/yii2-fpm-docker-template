@@ -33,5 +33,3 @@ jobs:
       run: |
         rm -rf /tmp/.buildx-cache
         mv /tmp/.buildx-cache-new /tmp/.buildx-cache
-    - name: Get PHP version
-      run: docker run --rm -i -u 1000:1000 -v ./:/app --workdir /app yii-app:latest php --version

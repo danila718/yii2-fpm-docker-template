@@ -28,8 +28,10 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-buildx-
     - name: Build the Docker image
-      run: docker buildx build . --file docker/yii.Dockerfile --tag yii-app:$(date +%s) --cache-from=type=local,src=/tmp/.buildx-cache --cache-to=type=local,dest=/tmp/.buildx-cache-new
+      run: docker buildx build . --file docker/yii.Dockerfile --tag yii-app:latest --cache-from=type=local,src=/tmp/.buildx-cache --cache-to=type=local,dest=/tmp/.buildx-cache-new
     - name: Move cache
       run: |
         rm -rf /tmp/.buildx-cache
         mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+    - name: Get PHP version
+      run: docker run --rm -it -u 1000:1000 -v ./:/app --workdir /app yii-app:latest php --version
